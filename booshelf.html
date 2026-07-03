@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Books to live by</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  /* ---- tokens: ink on paper, no colour ------------------------------ */
+  :root{
+    --paper:#EFE9DA;        /* warm logbook paper */
+    --page:#F5F1E6;         /* lighter page field */
+    --ink:#16130E;          /* near-black ink */
+    --ink-soft:#6B6253;     /* faded ink for secondary text */
+    --wash:#DBD3BF;         /* grey wash for fresh entries */
+    --frame:#16130E;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(rgba(22,19,14,.035) 1px, transparent 1px);
+    background-size:4px 4px;
+    color:var(--ink);
+    font-family:"Zilla Slab",Georgia,serif;
+    font-weight:500;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    padding:22px 14px 56px;
+    display:flex;justify-content:center;
+  }
+  .wrap{
+    width:100%;max-width:720px;background:var(--page);
+    border:2.5px solid var(--frame);
+    box-shadow:0 0 0 1px var(--frame) inset, 6px 7px 0 rgba(22,19,14,.16);
+    padding:26px 24px 34px;
+  }
+
+  /* ---- masthead ------------------------------------------------------ */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+  .brand{
+    font-family:"DM Serif Display",Georgia,serif;font-weight:400;
+    font-size:36px;line-height:1;letter-spacing:.01em;
+  }
+  .badge{
+    font-weight:700;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    padding:4px 8px;border:2px solid var(--ink);white-space:nowrap;color:var(--ink);
+  }
+  .badge.off{border-style:dashed;color:var(--ink-soft)}
+  .subhead{margin-top:4px;font-family:"DM Serif Display",Georgia,serif;font-style:italic;
+    font-size:18px;color:var(--ink-soft)}
+  .masthead-rule{border:0;border-top:2px solid var(--ink);margin:10px 0 26px;
+    box-shadow:0 3px 0 -1px var(--ink)} /* double rule */
+
+  /* ---- shelf --------------------------------------------------------- */
+  #shelf{min-height:150px}
+  .loading,.offline{font-style:italic;color:var(--ink-soft);padding:22px 2px;font-weight:500}
+  .offline{color:var(--ink)}
+  .shelf-row{margin-bottom:38px}
+  .books{display:flex;align-items:flex-end;gap:13px;padding:0 14px;min-height:124px}
+  .book{
+    width:76px;height:112px;flex:0 0 76px;
+    background:var(--page);color:var(--ink);
+    border:2.5px solid var(--ink);border-radius:0;
+    cursor:pointer;position:relative;
+    display:flex;flex-direction:column;align-items:center;
+    padding:9px 4px 7px;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .04s, box-shadow .04s;
+    font-family:inherit;
+  }
+  .book:nth-child(3n){height:104px}
+  .book:nth-child(4n+2){height:118px}
+  .book:hover{background:var(--paper)}
+  .book:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .book:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .book .spine{
+    writing-mode:vertical-rl;
+    font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:15px;
+    line-height:1.05;max-height:72px;overflow:hidden;text-align:center;
+  }
+  .book .stamp{
+    margin-top:auto;
+    width:20px;height:20px;border:2px solid var(--ink);
+    font-weight:700;font-size:10px;letter-spacing:0;text-transform:uppercase;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .book.fresh{animation:wash .9s ease}
+  @keyframes wash{
+    0%{background:var(--ink);color:var(--page)}
+    45%{background:var(--ink);color:var(--page)}
+    100%{background:var(--page)}
+  }
+  .book.empty{
+    border-style:dashed;box-shadow:none;color:var(--ink-soft);
+    justify-content:center;gap:4px;background:transparent;
+  }
+  .book.empty:hover{background:var(--paper);color:var(--ink)}
+  .book.empty:active{transform:none}
+  .book.empty .plus{font-family:"DM Serif Display",Georgia,serif;font-size:30px;line-height:1}
+  .book.empty .hint{font-weight:700;font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+  .board{
+    height:12px;background:var(--ink);
+    box-shadow:4px 4px 0 rgba(22,19,14,.16);
+  }
+
+  /* ---- desk buttons --------------------------------------------------- */
+  .deskrow{display:flex;gap:16px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+  .btn{
+    cursor:pointer;border-radius:0;border:2.5px solid var(--ink);
+    transition:transform .04s, box-shadow .04s;
+  }
+  .btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .btn-primary{
+    background:var(--ink);color:var(--page);
+    font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:19px;
+    letter-spacing:.14em;text-transform:uppercase;
+    padding:12px 26px;box-shadow:4px 4px 0 var(--ink);
+  }
+  .btn-primary:hover{background:var(--page);color:var(--ink)}
+  .btn-primary:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .btn-ghost{
+    background:var(--page);color:var(--ink);
+    font-family:"Zilla Slab";font-weight:700;font-size:14px;letter-spacing:.06em;
+    padding:11px 20px;box-shadow:3px 3px 0 var(--ink);
+  }
+  .btn-ghost:hover{background:var(--ink);color:var(--page)}
+  .btn-ghost:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+
+  /* ---- modal: a stamped plate with crop marks ------------------------ */
+  #overlay{
+    position:fixed;inset:0;background:rgba(22,19,14,.45);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:36px 16px;overflow-y:auto;z-index:10;
+  }
+  #overlay.open{display:flex}
+  #modal{
+    background:var(--page);border:2px solid var(--ink);
+    box-shadow:6px 7px 0 rgba(22,19,14,.25);
+    width:100%;max-width:560px;
+    padding:26px 26px 30px;position:relative;
+  }
+  /* crop marks — registration ticks just outside the plate */
+  .cnr{position:absolute;width:13px;height:13px;border:2px solid var(--ink)}
+  .cnr.tl{top:-6px;left:-6px;border-right:0;border-bottom:0}
+  .cnr.tr{top:-6px;right:-6px;border-left:0;border-bottom:0}
+  .cnr.bl{bottom:-6px;left:-6px;border-right:0;border-top:0}
+  .cnr.br{bottom:-6px;right:-6px;border-left:0;border-top:0}
+  #modal .close{
+    position:absolute;top:12px;right:14px;
+    background:none;border:none;cursor:pointer;
+    font-family:"Zilla Slab";font-weight:700;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-soft);
+    text-decoration:underline;text-underline-offset:3px;padding:4px;
+  }
+  #modal .close:hover{color:var(--ink)}
+  #modal .close:focus-visible{outline:3px solid var(--ink)}
+  #modal h2{
+    margin:0 0 4px;font-family:"DM Serif Display",Georgia,serif;font-weight:400;
+    font-size:27px;line-height:1.15;padding-right:70px;
+  }
+  .h-rule{border:0;border-top:2px solid var(--ink);margin:12px 0 18px;
+    box-shadow:0 3px 0 -1px var(--ink)}
+  .rule{border:0;border-top:1.5px solid var(--ink);margin:20px 0 16px}
+
+  /* ---- form ----------------------------------------------------------- */
+  label.field{display:block;font-weight:700;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-soft);margin:14px 0 6px 1px}
+  label.field .opt{font-style:italic;text-transform:none;letter-spacing:.02em;font-weight:500}
+  input[type=text],textarea{
+    width:100%;padding:11px 13px;
+    font-size:17px;font-family:"Zilla Slab";font-weight:600;color:var(--ink);
+    background:var(--paper);border:2.5px solid var(--ink);border-radius:0;outline:none;
+  }
+  input::placeholder,textarea::placeholder{color:var(--ink-soft);font-weight:500;font-style:italic}
+  input[type=text]:focus,textarea:focus{box-shadow:3px 3px 0 var(--ink)}
+  textarea{min-height:84px;resize:vertical;line-height:1.4}
+  .gloss-row{
+    border:2px solid var(--ink);background:var(--page);
+    padding:4px 14px 14px;margin:18px 0;position:relative;
+  }
+  .gloss-row .num{
+    position:absolute;top:-11px;left:12px;
+    background:var(--ink);color:var(--page);
+    font-weight:700;font-size:11px;letter-spacing:.1em;padding:2px 9px;
+  }
+  .gloss-row .remove{
+    position:absolute;top:-9px;right:12px;background:var(--page);
+    border:none;cursor:pointer;color:var(--ink-soft);
+    font-family:"Zilla Slab";font-weight:700;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;padding:0 4px;
+  }
+  .gloss-row .remove:hover{color:var(--ink)}
+  .gloss-row label.field{margin-top:12px}
+  .gloss-row input[type=text]{font-size:15px;padding:8px 11px}
+  .form-actions{display:flex;gap:14px;align-items:center;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+  .note{font-size:14px;font-weight:600;color:var(--ink-soft);font-style:italic}
+
+  /* ---- entry view ------------------------------------------------------ */
+  .v-meta{margin:2px 0 0;font-weight:600;font-size:15px;color:var(--ink)}
+  .v-meta .soft{color:var(--ink-soft);font-weight:500}
+  .v-reader{
+    display:inline-block;margin:12px 0 2px;
+    font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    border:2px solid var(--ink);padding:4px 9px;
+  }
+  .v-section h3{
+    margin:22px 0 2px;font-family:"DM Serif Display",Georgia,serif;font-weight:400;
+    font-size:20px;
+  }
+  .v-section .s-rule{border:0;border-top:2px solid var(--ink);margin:6px 0 12px;
+    box-shadow:0 3px 0 -1px var(--ink)}
+  .v-intro,.v-questions{margin:0;white-space:pre-wrap;font-weight:500;font-size:16px}
+  ol.gloss{list-style:none;margin:0;padding:0;counter-reset:g}
+  ol.gloss li{
+    counter-increment:g;margin:0 0 16px;padding-left:40px;position:relative;
+  }
+  ol.gloss li::before{
+    content:counter(g);
+    position:absolute;left:0;top:3px;
+    min-width:26px;height:22px;padding:0 3px;
+    background:var(--ink);color:var(--page);
+    font-weight:700;font-size:12px;letter-spacing:.06em;
+    display:flex;align-items:center;justify-content:center;
+  }
+  ol.gloss .w{font-family:"DM Serif Display",Georgia,serif;font-size:20px;line-height:1.2}
+  ol.gloss .src{display:block;font-style:italic;font-weight:500;color:var(--ink-soft);margin-top:1px}
+  ol.gloss .nt{display:block;font-weight:500;font-size:15px;margin-top:1px}
+
+  @media (max-width:520px){
+    .wrap{padding:20px 14px 26px}
+    .brand{font-size:29px}
+    .books{gap:10px;padding:0 8px}
+    .book{width:63px;flex-basis:63px;height:100px}
+    .book:nth-child(3n){height:93px}
+    .book:nth-child(4n+2){height:105px}
+    #modal{padding:20px 16px 24px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">Books to live by</div>
+    <div id="badge" class="badge off">checking…</div>
+  </div>
+  <div class="subhead">A shared reading journal — one book per entry.</div>
+  <hr class="masthead-rule" />
+
+  <main id="shelf" aria-live="polite">
+    <p class="loading">fetching the shelf…</p>
+  </main>
+
+  <div class="deskrow">
+    <button class="btn btn-primary" id="btn-entry">Add an entry</button>
+    <button class="btn btn-ghost" id="btn-notice">Notice</button>
+  </div>
+</div>
+
+<div id="overlay">
+  <div id="modal" role="dialog" aria-modal="true">
+    <span class="cnr tl"></span><span class="cnr tr"></span>
+    <span class="cnr bl"></span><span class="cnr br"></span>
+    <button class="close" id="modal-close">Close ✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   1. CONNECT YOUR LIBRARY  — the only block you ever need to edit.
+   Paste your Supabase project URL and anon (public) key between the
+   quotes. KEEP EACH ONE ON A SINGLE LINE — no line breaks inside the
+   quotes, and don't remove the quote marks themselves.
+   Find both in Supabase: Project Settings → API.
+   ===================================================================== */
+window.BOOKCLUB_CONFIG = {
+  url: "https://wwxgsklklnfdutgsgrrc.supabase.co",   /* e.g. https://abcdefgh.supabase.co */
+  key: "sb_publishable_eIKLm9le7BDovWMD5Ga5UQ_FrRwlocL",
+
+  /* Edit the notice board here whenever you like. */
+  notice: "Next meeting: (date to be announced)\n\nHouse rule: fill your glossary before the meeting,\nand bring at least two questions for the group."
+};
+</script>
+
+<script>
+/* ===================== app code — no need to edit below ============== */
+const CFG = window.BOOKCLUB_CONFIG || {};
+const SUPABASE_URL = String(CFG.url || "").trim().replace(/\/+$/, "");
+const SUPABASE_ANON_KEY = String(CFG.key || "").trim();
+const NOTICE_TEXT = CFG.notice || "No notices yet.";
+
+const MAX_GLOSSARY = 20;
+
+/* ---------- tiny helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const configured = () => SUPABASE_URL.startsWith("https://") &&
+  SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.startsWith("PASTE");
+const api = path => `${SUPABASE_URL}/rest/v1/${path}`;
+const headers = extra => ({
+  "apikey": SUPABASE_ANON_KEY,
+  "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+  "Content-Type": "application/json",
+  ...extra
+});
+
+let entries = [];
+let freshId = null;   /* newest entry gets the ink-wash animation once */
+
+function setBadge(text, off){
+  const b = $("#badge");
+  b.textContent = text;
+  b.classList.toggle("off", !!off);
+}
+function countBadge(){
+  setBadge(entries.length === 1 ? "1 book shelved" : `${entries.length} books shelved`, false);
+}
+
+/* ---------- data ---------- */
+async function fetchEntries(){
+  const res = await fetch(api("entries?select=*&order=created_at.asc"), {headers: headers()});
+  if(!res.ok) throw new Error(`Could not reach the library (${res.status})`);
+  return res.json();
+}
+async function insertEntry(data){
+  const res = await fetch(api("entries"), {
+    method:"POST",
+    headers: headers({"Prefer":"return=representation"}),
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error(`Save failed (${res.status})`);
+  return (await res.json())[0];
+}
+async function updateEntry(id, data){
+  const res = await fetch(api(`entries?id=eq.${encodeURIComponent(id)}`), {
+    method:"PATCH",
+    headers: headers({"Prefer":"return=representation"}),
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error(`Update failed (${res.status})`);
+  return (await res.json())[0];
+}
+
+/* ---------- shelf rendering ---------- */
+function booksPerRow(){
+  const w = $("#shelf").clientWidth || 660;
+  const slot = window.innerWidth <= 520 ? 74 : 90; /* book + gap */
+  return Math.max(3, Math.floor((w - 28) / slot));
+}
+function renderShelf(){
+  const shelf = $("#shelf");
+  shelf.innerHTML = "";
+  const perRow = booksPerRow();
+  const slots = [...entries, {empty:true}]; /* always one waiting slot */
+  for(let i = 0; i < slots.length; i += perRow){
+    const row = document.createElement("div");
+    row.className = "shelf-row";
+    const books = document.createElement("div");
+    books.className = "books";
+    slots.slice(i, i + perRow).forEach(item => {
+      const b = document.createElement("button");
+      b.className = "book" + (item.empty ? " empty" : "");
+      if(item.empty){
+        b.innerHTML = `<span class="plus">+</span><span class="hint">new entry</span>`;
+        b.setAttribute("aria-label","Add a new journal entry");
+        b.addEventListener("click", () => openForm(null));
+      }else{
+        if(item.id === freshId){ b.classList.add("fresh"); }
+        const initial = (item.reader || "?").trim().charAt(0).toUpperCase();
+        b.innerHTML = `<span class="spine">${esc(item.title)}</span><span class="stamp">${esc(initial)}</span>`;
+        b.setAttribute("aria-label", `${item.title} — journal by ${item.reader}`);
+        b.addEventListener("click", () => openView(item));
+      }
+      books.appendChild(b);
+    });
+    const board = document.createElement("div");
+    board.className = "board";
+    row.append(books, board);
+    shelf.appendChild(row);
+  }
+  freshId = null;
+}
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderShelf, 150);
+});
+
+/* ---------- modal plumbing ---------- */
+function openModal(html){
+  $("#modal-body").innerHTML = html;
+  $("#overlay").classList.add("open");
+  $("#overlay").scrollTop = 0;
+  document.body.style.overflow = "hidden";
+}
+function closeModal(){
+  $("#overlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+$("#modal-close").addEventListener("click", closeModal);
+$("#overlay").addEventListener("click", e => { if(e.target.id === "overlay") closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+/* ---------- entry form ---------- */
+function glossRowHTML(n, g = {}){
+  return `<div class="gloss-row">
+    <span class="num">No. ${n}</span>
+    <button type="button" class="remove" aria-label="Remove word ${n}">remove</button>
+    <label class="field">Word / collocation</label>
+    <input type="text" class="g-word" value="${esc(g.word)}">
+    <label class="field">Source text sentence</label>
+    <input type="text" class="g-src" value="${esc(g.source)}">
+    <label class="field">Notes on usage</label>
+    <input type="text" class="g-note" value="${esc(g.note)}">
+  </div>`;
+}
+function openForm(entry){
+  const e = entry || {};
+  const gloss = (e.glossary && e.glossary.length) ? e.glossary : [{},{},{}];
+  openModal(`
+  <h2>${entry ? "Edit journal entry" : "Book journal entry"}</h2>
+  <hr class="h-rule" />
+  <label class="field" for="f-title">Title of the book</label>
+  <input type="text" id="f-title" value="${esc(e.title)}" placeholder="required">
+  <label class="field" for="f-author">Author</label>
+  <input type="text" id="f-author" value="${esc(e.author)}">
+  <label class="field" for="f-isbn">ISBN</label>
+  <input type="text" id="f-isbn" value="${esc(e.isbn)}">
+  <hr class="rule" />
+  <label class="field" for="f-reader">Reader</label>
+  <input type="text" id="f-reader" value="${esc(e.reader)}" placeholder="required">
+  <label class="field" for="f-intro">Brief introduction</label>
+  <textarea id="f-intro">${esc(e.intro)}</textarea>
+  <hr class="rule" />
+  <label class="field">Glossary <span class="opt">— up to ${MAX_GLOSSARY} words or collocations that stood out</span></label>
+  <div id="gloss-list">${gloss.map((g,i)=>glossRowHTML(i+1,g)).join("")}</div>
+  <button type="button" class="btn btn-ghost" id="add-gloss">+ Add a word</button>
+  <hr class="rule" />
+  <label class="field" for="f-questions">Questions for the group</label>
+  <textarea id="f-questions"></textarea>
+  <div class="form-actions">
+    <span class="note" id="form-msg"></span>
+    <button type="button" class="btn btn-primary" id="f-save">Save entry</button>
+  </div>`);
+  $("#f-questions").value = e.questions || "";
+
+  const list = $("#gloss-list");
+  function renumber(){
+    [...list.children].forEach((row,i)=>{ row.querySelector(".num").textContent = "No. " + (i+1); });
+    $("#add-gloss").style.display = list.children.length >= MAX_GLOSSARY ? "none" : "";
+  }
+  list.addEventListener("click", ev => {
+    if(ev.target.classList.contains("remove")){
+      ev.target.closest(".gloss-row").remove();
+      renumber();
+    }
+  });
+  $("#add-gloss").addEventListener("click", () => {
+    if(list.children.length >= MAX_GLOSSARY) return;
+    list.insertAdjacentHTML("beforeend", glossRowHTML(list.children.length+1));
+    renumber();
+  });
+  renumber();
+
+  $("#f-save").addEventListener("click", async () => {
+    const msg = $("#form-msg");
+    const title = $("#f-title").value.trim();
+    const reader = $("#f-reader").value.trim();
+    if(!title || !reader){ msg.textContent = "title and reader are needed"; return; }
+    const glossary = [...list.children].map(row => ({
+      word: row.querySelector(".g-word").value.trim(),
+      source: row.querySelector(".g-src").value.trim(),
+      note: row.querySelector(".g-note").value.trim()
+    })).filter(g => g.word);
+    const data = {
+      title, reader,
+      author: $("#f-author").value.trim(),
+      isbn: $("#f-isbn").value.trim(),
+      intro: $("#f-intro").value.trim(),
+      questions: $("#f-questions").value.trim(),
+      glossary
+    };
+    msg.textContent = "saving…";
+    try{
+      if(entry){
+        const updated = await updateEntry(entry.id, data);
+        entries = entries.map(x => x.id === entry.id ? updated : x);
+      }else{
+        const created = await insertEntry(data);
+        entries.push(created);
+        freshId = created.id;
+      }
+      countBadge();
+      renderShelf();
+      closeModal();
+    }catch(err){
+      msg.textContent = err.message;
+    }
+  });
+}
+
+/* ---------- entry view ---------- */
+function openView(entry){
+  const date = entry.created_at ? new Date(entry.created_at).toLocaleDateString() : "";
+  const gloss = entry.glossary || [];
+  openModal(`
+  <h2>${esc(entry.title)}</h2>
+  <p class="v-meta">${entry.author ? esc(entry.author) : '<span class="soft">author unknown</span>'}
+    ${entry.isbn ? ` <span class="soft">&nbsp;·&nbsp; ISBN ${esc(entry.isbn)}</span>` : ""}</p>
+  <span class="v-reader">Read by ${esc(entry.reader)}${date ? " · " + esc(date) : ""}</span>
+  <hr class="h-rule" />
+  ${entry.intro ? `<div class="v-section"><h3>Introduction</h3><hr class="s-rule" /><p class="v-intro">${esc(entry.intro)}</p></div>` : ""}
+  ${gloss.length ? `<div class="v-section"><h3>Glossary</h3><hr class="s-rule" /><ol class="gloss">
+    ${gloss.map(g => `<li><span class="w">${esc(g.word)}</span>
+      ${g.source ? `<span class="src">“${esc(g.source)}”</span>` : ""}
+      ${g.note ? `<span class="nt">${esc(g.note)}</span>` : ""}</li>`).join("")}
+  </ol></div>` : ""}
+  ${entry.questions ? `<div class="v-section"><h3>Questions for the group</h3><hr class="s-rule" /><p class="v-questions">${esc(entry.questions)}</p></div>` : ""}
+  <div class="form-actions"><button type="button" class="btn btn-ghost" id="v-edit">Edit</button></div>`);
+  $("#v-edit").addEventListener("click", () => openForm(entry));
+}
+
+/* ---------- notice ---------- */
+$("#btn-notice").addEventListener("click", () => {
+  openModal(`<h2>Notice</h2><hr class="h-rule" /><p class="v-questions">${esc(NOTICE_TEXT)}</p>`);
+});
+$("#btn-entry").addEventListener("click", () => openForm(null));
+
+/* ---------- boot ---------- */
+(async function init(){
+  const shelf = $("#shelf");
+  if(!window.BOOKCLUB_CONFIG){
+    setBadge("config error", true);
+    shelf.innerHTML = `<p class="offline">The connection block at the top of the file couldn't be read —
+      usually a stray quote mark or a line break slipped in while pasting. Open the file, find the
+      <em>CONNECT YOUR LIBRARY</em> block, and make sure the URL and key each sit on one single line,
+      inside their quote marks.</p>`;
+    return;
+  }
+  if(!configured()){
+    setBadge("not connected", true);
+    shelf.innerHTML = `<p class="offline">The shelf isn't connected yet — open this file and paste your
+      Supabase project URL and anon key into the <em>CONNECT YOUR LIBRARY</em> block at the top of the
+      &lt;script&gt; section. (If you already did, check that the URL starts with https:// and the full
+      key made it in without line breaks.)</p>`;
+    return;
+  }
+  try{
+    entries = await fetchEntries();
+    countBadge();
+    renderShelf();
+  }catch(err){
+    setBadge("offline", true);
+    shelf.innerHTML = `<p class="offline">${esc(err.message)}. Check the Supabase URL/key and that the
+      <em>entries</em> table exists with its policies.</p>`;
+  }
+})();
+</script>
+</body>
+</html>
