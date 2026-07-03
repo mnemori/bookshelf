@@ -73,25 +73,29 @@
   }
   .book:nth-child(3n){height:104px}
   .book:nth-child(4n+2){height:118px}
-  .book:hover{background:var(--paper)}
   .book:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
   .book:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .book:not(.empty){overflow:hidden}
+  .book:not(.empty):hover{box-shadow:5px 5px 0 var(--ink);transform:translate(-1px,-1px)}
+  .book:not(.empty):active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
   .book .spine{
     writing-mode:vertical-rl;
     font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:15px;
-    line-height:1.05;max-height:72px;overflow:hidden;text-align:center;
+    line-height:1.08;max-height:74px;overflow:hidden;text-align:center;
   }
   .book .stamp{
     margin-top:auto;
-    width:20px;height:20px;border:2px solid var(--ink);
+    width:20px;height:20px;border:2px solid var(--ink);background:var(--page);
     font-weight:700;font-size:10px;letter-spacing:0;text-transform:uppercase;
     display:flex;align-items:center;justify-content:center;
   }
+  /* dark covers: ink-heavy shades flip to paper-white text */
+  .book.dark{color:var(--page)}
+  .book.dark .stamp{border-color:var(--page);background:transparent;color:var(--page)}
   .book.fresh{animation:wash .9s ease}
   @keyframes wash{
     0%{background:var(--ink);color:var(--page)}
     45%{background:var(--ink);color:var(--page)}
-    100%{background:var(--page)}
   }
   .book.empty{
     border-style:dashed;box-shadow:none;color:var(--ink-soft);
@@ -281,11 +285,11 @@
    Find both in Supabase: Project Settings → API.
    ===================================================================== */
 window.BOOKCLUB_CONFIG = {
-  url: "https://wwxgsklklnfdutgsgrrc.supabase.co",   /* e.g. https://abcdefgh.supabase.co */
+  url: "https://wwxgsklklnfdutgsgrrc.supabase.co",   
   key: "sb_publishable_eIKLm9le7BDovWMD5Ga5UQ_FrRwlocL",
 
-  /* Edit the notice board here whenever you like. */
-  notice: "Next meeting : July 4th / Happy journaling "
+ 
+  notice: "Meeting is 3PM every Saturday. Happy journaling."
 };
 </script>
 
@@ -313,6 +317,7 @@ const headers = extra => ({
 });
 
 let entries = [];
+let loaded = false;   /* true only after a successful fetch */
 let freshId = null;   /* newest entry gets the ink-wash animation once */
 
 function setBadge(text, off){
@@ -350,6 +355,25 @@ async function updateEntry(id, data){
 }
 
 /* ---------- shelf rendering ---------- */
+/* Deterministic "random": hash the entry id so a book keeps the same
+   cover shade forever, on every reload, for every member. */
+function hashCode(str){
+  let h = 0;
+  for(let i = 0; i < str.length; i++){ h = (h * 31 + str.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
+/* Warm grays from near-ink to near-paper. Returns [cssColor, isDark]. */
+function coverShade(id){
+  const L = 22 + (hashCode(String(id)) % 66);   /* lightness 22–87% */
+  return [`hsl(44, 11%, ${L}%)`, L < 50];
+}
+/* Longer titles get smaller spine type; the full title lives in the popup. */
+function spineFit(title){
+  const n = title.length;
+  const size = n <= 14 ? 15 : n <= 26 ? 13 : n <= 42 ? 11.5 : 10.5;
+  const shown = n > 55 ? title.slice(0, 54).trimEnd() + "…" : title;
+  return [size, shown];
+}
 function booksPerRow(){
   const w = $("#shelf").clientWidth || 660;
   const slot = window.innerWidth <= 520 ? 74 : 90; /* book + gap */
@@ -374,8 +398,12 @@ function renderShelf(){
         b.addEventListener("click", () => openForm(null));
       }else{
         if(item.id === freshId){ b.classList.add("fresh"); }
+        const [shade, isDark] = coverShade(item.id);
+        b.style.background = shade;
+        if(isDark) b.classList.add("dark");
+        const [size, shown] = spineFit(item.title || "");
         const initial = (item.reader || "?").trim().charAt(0).toUpperCase();
-        b.innerHTML = `<span class="spine">${esc(item.title)}</span><span class="stamp">${esc(initial)}</span>`;
+        b.innerHTML = `<span class="spine" style="font-size:${size}px">${esc(shown)}</span><span class="stamp">${esc(initial)}</span>`;
         b.setAttribute("aria-label", `${item.title} — journal by ${item.reader}`);
         b.addEventListener("click", () => openView(item));
       }
@@ -391,7 +419,7 @@ function renderShelf(){
 let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(renderShelf, 150);
+  resizeTimer = setTimeout(() => { if(loaded) renderShelf(); }, 150);
 });
 
 /* ---------- modal plumbing ---------- */
@@ -555,12 +583,23 @@ $("#btn-entry").addEventListener("click", () => openForm(null));
   }
   try{
     entries = await fetchEntries();
+    loaded = true;
     countBadge();
     renderShelf();
   }catch(err){
     setBadge("offline", true);
-    shelf.innerHTML = `<p class="offline">${esc(err.message)}. Check the Supabase URL/key and that the
-      <em>entries</em> table exists with its policies.</p>`;
+    const onNeocities = location.hostname.endsWith("neocities.org");
+    if(onNeocities && err instanceof TypeError){
+      /* Free Neocities accounts send connect-src 'self', which blocks fetch()
+         to any outside service — including Supabase. */
+      shelf.innerHTML = `<p class="offline">Neocities is blocking the connection to the library.
+        Free Neocities accounts don't allow pages to contact outside services (their Content
+        Security Policy). The page needs to live on a host without that restriction — or inside
+        an iframe on this page — for the shared shelf to work.</p>`;
+    }else{
+      shelf.innerHTML = `<p class="offline">${esc(err.message)}. Check the Supabase URL/key and that the
+        <em>entries</em> table exists with its policies.</p>`;
+    }
   }
 })();
 </script>
